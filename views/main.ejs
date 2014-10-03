@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <title><%= title %></title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel='stylesheet' href='/stylesheets/signin.css' />
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"> -->
+    <!-- Optional theme -->
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"> -->
+    <!-- Latest compiled and minified JavaScript -->
+    <!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script> -->
+    <script src='/socket.io/socket.io.js' type='text/javascript'></script>
+   </head>
+
+  <body>
+    
+     <div class="container" style="margin-top:30px" id="loginbox">
+        <div class="col-md-4">
+           <div class="login-panel panel panel-default">
+              
+              <div class="panel-heading">
+                  <h3 class="panel-title">Sign In</h3>
+              </div>
+
+              <div class="panel-body">
+                <form role="form">
+                    <fieldset>
+                        <div class="form-group">
+                            <input class="form-control" placeholder="Username" name="user[name]" id="luser" type="text" autofocus="" required>
+                        </div>
+                        <div class="form-group">
+                            <input class="form-control" placeholder="Password" name="user[pass]" id="pass3" type="password" value="" required>
+                        </div>
+                        <!-- Change this to a button or input when using this as a form -->
+                        <a href="javascript:;" style="margin-left:10px; font-size:120%;" class="btn btn-sm btn-success">Login</a>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <a href="#" style="margin-left:80px;text-decoration:underline;font-size:110%; font-family:Calibri;" onclick="$('#loginbox').hide(); $('#luser').val('');$('#pass3').val('');$('#signupbox').show()">Create an Acccount </a>
+                    </fieldset>
+                </form>
+              </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="container" style="margin-top:30px;display:none" id="signupbox">
+        <div class="col-md-4">
+           <div class="login-panel panel panel-default">
+              
+              <div class="panel-heading">
+                  <h3 class="panel-title">Sign Up</h3>
+              </div>
+
+              <div class="panel-body">
+                <form role="form" id="SignUpForm">
+                    <fieldset>
+                        <div class="form-group">
+                            <input class="form-control" placeholder="Username" name="user[name]" id="ruser" type="text" autofocus="" required>
+                        </div>
+                        <div class="form-group">
+                            <input class="form-control" placeholder="Password" name="user[pass]" id="pass1" type="password" value="" required>
+                        </div>
+                        <div class="form-group">
+                            <input class="form-control" placeholder="Confirm Password" id="pass2" type="password" value="" required>
+                        </div>
+                                <!-- Change this to a button or input when using this as a form -->
+                        <input type="submit" value="Register" style="margin-left:10px;font-family:Cambria; font-size:110%;" class="btn btn-primary btn-sm" />
+                        
+                        <!-- <a href="javascript:;" style="margin-left:10px; font-size:110%;" class="btn btn-sm btn-success">Register</a> -->
+                        
+                        <a href="#" style="margin-left:70px;text-decoration:underline;font-size:110%; font-family:Calibri;" onclick="$('#loginbox').show();$('#ruser').val('');$('#pass1').val('');$('#pass2').val('');$('#signupbox').hide(); ">Login to existing account </a>
+                    </fieldset>
+                </form>
+              </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="EntryBox" style="display:none">
+        <form id="TimeZoneEntry">
+          <div class="row">
+              <div class="col-xs-2">
+                <input type="text" class="form-control" placeholder="Name of Timezone" required id='timezonename'>
+              </div>
+              <div class="col-xs-2">
+                <input type="text" class="form-control" placeholder="City Name" required id='cityname'>
+              </div>
+              <div class="col-xs-2">
+                <input type="text" class="form-control" placeholder="UTC Offset [(+/-)hh:mm]" required id='utcoffset'>
+              </div>
+              <input type="submit" value="Add Timezone" class="btn btn-primary btn-sm" />
+         </div>
+
+          <div>
+            <span class="glyphicon glyphicon-save"></span> Save
+            <span class="glyphicon glyphicon-saved"></span> Saved
+            <span class="glyphicon glyphicon-remove"></span> Remove
+            <span class="glyphicon glyphicon-ok"></span> Ok
+            <span class="glyphicon glyphicon-edit"></span> Edit
+          </div>
+        </form>
+        
+        <div class="form-group">
+          <div class="input-group">
+            <div class="input-group-addon">Filter</div>
+            <input id="filter" class="form-control" type="email" placeholder="Type here....">
+          </div>
+        </div>
+        <table class="table table-striped table-bordered table-hover">
+          <thead>
+            <th class="text-center">Time Zone Name</th>
+            <th class="text-center">City Name</th>
+            <th class="text-center">UTC Offset</th>
+            <th class="text-center">Current Time</th>
+            <th class="text-center">
+              <a href="#"><span class="glyphicon glyphicon-edit"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
+              <a href="#"><span class="glyphicon glyphicon-remove"></span></a>
+            </th>
+          </thead>
+           <tbody class="searchable">
+          </tbody>
+        </table>
+
+    </div>
+
+    <script>
+
+        var JogPosts = [];
+        var socket = io.connect();
+
+         //var speed = (distanceEntry/timeEntry).toFixed(2);
+         //         if(distanceEntry=='' || timeEntry=='') {
+         //           return false;
+         //         }
+         // check for empty fields
+         //
+         //  for any error add Error message, clear the messages afterwards
+         //
+         
+         //  how to add error function ...  $(document).ready(function() {
+         //$('.submit').click(function(){
+          //validateForm();   
+          //});
+          //$('.error').hide();
+         //   $('#cityname').after("<span class='error'>Enter your name</span>");
+         // });
+      
+      $(document).ready(function() {
+          
+        socket.emit('GetPost');
+
+        socket.on('Posts', function(Entries) {
+            
+            $.each(Entries, function(index, element) {
+              $.each(element, function(index1, value) {
+                JogPosts.push(value);   
+                if(value.date != null && value.date != ""){
+                }
+              });
+            });
+
+        });
+
+        socket.on('PostAdded', function(result) {
+            if(result.success==true) {
+               //     var entrydata=result.entry;
+               //     var entryDate=new Date(entrydata.date);
+               //     var entryDateString=entryDate.toDateString();//toLocaleDateString  
+              //      $('#JogEntryTable').prepend("<tr bgcolor='#CEF6F5' align='center'><td>"+entryDateString+"</td><td>" + entrydata.distance + "</td><td>"+entrydata.time+"</td><td>" + entrydata.speed + "</td></tr>");
+               //     JogPosts.push(result.entry);
+            }
+            // chart.clearChart();
+            // drawVisualization(JogPosts);
+        });
+
+        $('#filter').keyup(function () {
+
+            var rex = new RegExp($(this).val(), 'i');
+            $('.searchable tr').hide();
+            $('.searchable tr').filter(function () {
+                return rex.test($(this).text());
+            }).show();
+
+        });
+
+        $('#SignUpForm').submit(function() {
+            console.log('Hello Register');
+            var user = $("#ruser").val();
+            var pass1 = $("#pass1").val();
+            var pass2 = $("#pass2").val();
+            if(pass1!=pass2) {
+              console.log('invalid pass');
+              //$('.error').hide();
+              $('#pass1').after("<span class='error'>Password donot match</span>");
+            }
+            socket.emit('RegisterForm', { username: user, password: pass1 });
+            $("#ruser").val('');
+            $("#pass1").val('');
+            $("#pass2").val('');
+            return false;
+        });
+
+        $('#TimeZoneEntry').submit(function() {
+
+              // check for vailityidy, 
+              // name and cityshould not be empty, // time offset can be empty, but withni 0000 < 2200
+              // other validation
+              // if failed, add an error message
+              // if validated, addd post and update the message post added
+              // update the table
+              // clear the fields
+              
+              // ability to edit and delete the posts
+              // same concepts of saving after editing as was when a new post was added
+              // filter plugin available
+
+              console.log('hello');
+
+              var timezonenameEntry = $("#timezonename").val();
+              var citynameEntry = $("#cityname").val();
+              var utcoffsetEntry = $("#utcoffset").val();
+
+              socket.emit('AddPost', { timezonename: timezonenameEntry, cityname: citynameEntry, utcoffset: utcoffsetEntry });
+                  
+              $("#utcoffset").val('');
+              $("#timezonename").val('');
+              $("#cityname").val('');
+
+              return false;
+          });
+      });
+          
+    </script>
+
+</body>
+</html>
